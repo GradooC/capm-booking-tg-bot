@@ -12,4 +12,5 @@ if (!process.env.CHECK_INTERVAL) {
 export const CONFIG = {
     token: process.env.TELEGRAM_BOT_TOKEN,
     checkInterval: parseInt(process.env.CHECK_INTERVAL, 10),
+    isDevelopment: process.env.NODE_ENV === 'development',
 };

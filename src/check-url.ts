@@ -1,8 +1,17 @@
 import axios, { isAxiosError } from 'axios';
 import { MonitoredUrl } from './types';
 import TelegramBot from 'node-telegram-bot-api';
+import { CONFIG } from './config';
 
-export async function pollUrls(urlArray: MonitoredUrl[], interval = 1000) {
+type PollUrlsOptions = {
+    bot: TelegramBot;
+    chatId: string;
+};
+
+export async function pollUrls(
+    urlArray: MonitoredUrl[],
+    { bot, chatId }: PollUrlsOptions
+) {
     // Create a promise for each URL that will resolve when it gets {isSuccess: true}
     const pollingPromises = urlArray.map(({ url, name, payload }) => {
         return new Promise((resolve) => {
@@ -26,6 +35,7 @@ export async function pollUrls(urlArray: MonitoredUrl[], interval = 1000) {
                         );
                         isPolling = false;
                         resolve({ url, success: true, data: response.data });
+                        sendSuccessNotification(bot, chatId, name);
                         return;
                     }
 
@@ -72,7 +82,7 @@ export async function pollUrls(urlArray: MonitoredUrl[], interval = 1000) {
 
                 // Schedule next poll if still polling
                 if (isPolling) {
-                    setTimeout(poll, interval);
+                    setTimeout(poll, CONFIG.checkInterval);
                 }
             };
 
@@ -82,17 +92,20 @@ export async function pollUrls(urlArray: MonitoredUrl[], interval = 1000) {
     });
 
     // Wait for all URLs to complete
-    const results = await Promise.all(pollingPromises);
+    await Promise.all(pollingPromises);
     console.log('🎉 All URLs have returned success responses!');
-    return results;
 }
 
-async function sendSuccessNotification(bot: TelegramBot, chatId: string) {
+async function sendSuccessNotification(
+    bot: TelegramBot,
+    chatId: string,
+    name: string
+) {
     const message = `
 🎉 УСПЕХ!
 
 Время: ${new Date().toLocaleString('ru-RU')}
-Результат: стоянка успешно забронирована!
+Результат: стоянка ${name} успешно забронирована!
     `;
 
     try {

@@ -10,5 +10,5 @@ export async function startHandler(msg: Message, bot: TelegramBot) {
 
     await bot.sendMessage(chatId, message);
 
-    pollUrls(monitoredUrls);
+    pollUrls(monitoredUrls, { bot, chatId });
 }

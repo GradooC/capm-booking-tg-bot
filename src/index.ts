@@ -1,6 +1,12 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { CONFIG } from './config';
 import { startHandler } from './handlers';
+import { server } from './mocks/server';
+
+if (CONFIG.isDevelopment) {
+    console.log('🔧 Starting in development mode with mocks...');
+    server.listen({ onUnhandledRequest: 'bypass' });
+}
 
 const bot = new TelegramBot(CONFIG.token, { polling: true });
 
