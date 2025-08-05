@@ -1,0 +1,63 @@
+name: Deploy Bot to VPS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup and Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          script: |
+            echo "Starting deployment..."
+
+            # Setup directory and repository
+            if [ ! -d "/root/app" ]; then
+              echo "Creating /root/app directory and cloning repository..."
+              mkdir -p /root/app
+              cd /root
+              git clone https://github.com/${{ github.repository }}.git app
+            else
+              echo "Directory exists, updating repository..."
+              cd /root/app
+              git pull origin main
+            fi
+
+            # Verify we're in the right place
+            cd /root/app
+            echo "Current working directory: $(pwd)"
+            echo "Repository contents:"
+            ls -la
+
+            # Docker operations
+            echo "Building Docker image..."
+            docker build -t telegram-monitor-bot .
+
+            echo "Stopping existing container..."
+            docker stop telegram-monitor-bot 2>/dev/null || echo "No existing container to stop"
+
+            echo "Removing existing container..."
+            docker rm telegram-monitor-bot 2>/dev/null || echo "No existing container to remove"
+
+            echo "Starting new container..."
+            docker run -d --name telegram-monitor-bot -p 3000:3000 \
+              -e TELEGRAM_BOT_TOKEN="${{ secrets.TELEGRAM_BOT_TOKEN }}" \
+              -e CHECK_INTERVAL="${{ secrets.CHECK_INTERVAL }}" \
+              telegram-monitor-bot
+
+            echo "Deployment completed!"
+            echo "Container status:"
+            docker ps -a | grep telegram-monitor-bot
+
+            echo "Container logs:"
+            docker logs telegram-monitor-bot
