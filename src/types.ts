@@ -6,15 +6,17 @@ export type ApiResponse = {
     targetUrl: string | null;
 };
 
+export type SelectedCamping = {
+    text: string;
+    value: "43" | "44";
+    capacity: number;
+};
+
 export type MonitoredUrl = {
     name: string;
     url: string;
     payload: {
-        selectedCamping: {
-            text: string;
-            value: string;
-            capacity: number;
-        };
+        selectedCamping: SelectedCamping;
         isAgree: boolean;
         fullName: string;
         phoneNumber: string;

@@ -1,25 +1,24 @@
-import { http, HttpResponse } from 'msw';
-import { MonitoredUrl } from '../types';
+import { http, HttpResponse } from "msw";
+import { MonitoredUrl, SelectedCamping } from "../types";
+import { CONFIG } from "../config";
 
-// Counter to track requests for each URL
-const requestCounters = new Map<string, number>();
+const requestCounters = {
+    "43": 10,
+    "44": 5,
+} satisfies Record<SelectedCamping["value"], number>;
 
 export const handlers = [
-    // Mock for createBooking endpoint
-    http.post<Record<string, never>, MonitoredUrl['payload']>(
-        'https://admin3.zapytai.by/widget/createBooking',
+    http.post<Record<string, never>, MonitoredUrl["payload"]>(
+        CONFIG.url,
         async ({ request }) => {
-            const { selectedCamping } = await request.json();
+            const {
+                selectedCamping: { value },
+            } = await request.json();
 
-            // Get current count for this URL
-            const currentCount =
-                requestCounters.get(selectedCamping.value) || 0;
-
-            // Increment counter
-            requestCounters.set(selectedCamping.value, currentCount + 1);
+            requestCounters[value] -= 1;
 
             switch (true) {
-                case currentCount > 5:
+                case requestCounters[value] < 1:
                     return HttpResponse.json(
                         { isSuccess: true },
                         { status: 200 }
@@ -29,7 +28,7 @@ export const handlers = [
                         {
                             isSuccess: false,
                             message:
-                                'Выбранные даты уже заняты. Смотрите шахматку для поиска свободных дат',
+                                "Выбранные даты уже заняты. Смотрите шахматку для поиска свободных дат",
                         },
                         { status: 200 }
                     );
