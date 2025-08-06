@@ -4,6 +4,7 @@ import TelegramBot from "node-telegram-bot-api";
 import { CONFIG } from "./config";
 import { logger } from "./logger";
 import { pollingManager } from "./polling-state";
+import { sendSuccessNotification } from "./notifications";
 
 type PollUrlsOptions = {
     bot: TelegramBot;
@@ -42,6 +43,7 @@ export async function pollUrls(
                     }
 
                     logger.info(
+                        response.data,
                         `⏳ Polling ${name} - waiting for success response...`
                     );
                 } catch (error) {
@@ -97,23 +99,4 @@ export async function pollUrls(
     // Wait for all URLs to complete
     await Promise.all(pollingPromises);
     logger.info("🎉 All URLs have returned success responses!");
-}
-
-async function sendSuccessNotification(
-    bot: TelegramBot,
-    chatId: string,
-    name: string
-) {
-    const message = `
-🎉 УСПЕХ!
-
-Время: ${new Date().toLocaleString("ru-RU")}
-Результат: стоянка ${name} успешно забронирована!
-    `;
-
-    try {
-        await bot.sendMessage(chatId, message);
-    } catch (error) {
-        logger.error("Ошибка отправки сообщения:", error);
-    }
 }
