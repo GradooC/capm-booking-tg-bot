@@ -1,6 +1,6 @@
 import TelegramBot from "node-telegram-bot-api";
 import { CONFIG } from "./config";
-import { startHandler } from "./handlers";
+import { startHandler, stopHandler } from "./handlers";
 import { server } from "./mocks/server";
 import { logger } from "./logger";
 
@@ -14,6 +14,7 @@ const bot = new TelegramBot(CONFIG.token, { polling: true });
 logger.info("🤖 Telegram Monitor Bot запущен!");
 
 bot.onText(/\/start/, (msg) => startHandler(msg, bot));
+bot.onText(/\/stop/, (msg) => stopHandler(msg, bot));
 
 // Обработка завершения процесса
 process.on("SIGINT", () => {

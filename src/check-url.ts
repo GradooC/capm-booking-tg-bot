@@ -3,6 +3,7 @@ import { MonitoredUrl } from "./types";
 import TelegramBot from "node-telegram-bot-api";
 import { CONFIG } from "./config";
 import { logger } from "./logger";
+import { pollingManager } from "./polling-state";
 
 type PollUrlsOptions = {
     bot: TelegramBot;
@@ -19,7 +20,7 @@ export async function pollUrls(
             let isPolling = true;
 
             const poll = async () => {
-                if (!isPolling) return;
+                if (!isPolling || !pollingManager.isActive()) return;
 
                 try {
                     const response = await axios.post(url, payload, {
