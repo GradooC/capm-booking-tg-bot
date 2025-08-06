@@ -1,7 +1,8 @@
-import axios, { isAxiosError } from 'axios';
-import { MonitoredUrl } from './types';
-import TelegramBot from 'node-telegram-bot-api';
-import { CONFIG } from './config';
+import axios, { isAxiosError } from "axios";
+import { MonitoredUrl } from "./types";
+import TelegramBot from "node-telegram-bot-api";
+import { CONFIG } from "./config";
+import { logger } from "./logger";
 
 type PollUrlsOptions = {
     bot: TelegramBot;
@@ -24,13 +25,13 @@ export async function pollUrls(
                     const response = await axios.post(url, payload, {
                         timeout: 10000, // 10 second timeout
                         headers: {
-                            'Content-Type': 'application/json',
+                            "Content-Type": "application/json",
                         },
                     });
 
                     // Check if we got the success response
                     if (response.data.isSuccess) {
-                        console.log(
+                        logger.info(
                             `✅ Success response received from ${name}`
                         );
                         isPolling = false;
@@ -39,41 +40,42 @@ export async function pollUrls(
                         return;
                     }
 
-                    console.log(
+                    logger.info(
                         `⏳ Polling ${name} - waiting for success response...`
                     );
                 } catch (error) {
                     // Handle timeout and other errors without throwing
                     if (isAxiosError(error)) {
                         switch (true) {
-                            case error.code === 'ECONNABORTED':
-                            case error.message.includes('timeout'):
-                                console.log(
+                            case error.code === "ECONNABORTED":
+                            case error.message.includes("timeout"):
+                                logger.warn(
                                     `⏰ Request timeout for ${name} (10s) - continuing to poll...`
                                 );
                                 break;
                             case Boolean(error.response):
                                 // Server responded with error status
-                                console.log(
+
+                                logger.warn(
                                     `❌ Server error for ${name} (${error.response?.status}) - continuing to poll...`
                                 );
                                 break;
                             case Boolean(error.request):
                                 // Network error
-                                console.log(
+                                logger.warn(
                                     `🌐 Network error for ${name} - continuing to poll...`
                                 );
                                 break;
                             default:
-                                console.log(
+                                logger.warn(
                                     `❌ Error polling ${name}:`,
                                     error.message,
-                                    '- continuing to poll...'
+                                    "- continuing to poll..."
                                 );
                                 break;
                         }
                     } else {
-                        console.log(
+                        logger.error(
                             `❌ Unexpected error polling ${name}:`,
                             error
                         );
@@ -93,7 +95,7 @@ export async function pollUrls(
 
     // Wait for all URLs to complete
     await Promise.all(pollingPromises);
-    console.log('🎉 All URLs have returned success responses!');
+    logger.info("🎉 All URLs have returned success responses!");
 }
 
 async function sendSuccessNotification(
@@ -104,13 +106,13 @@ async function sendSuccessNotification(
     const message = `
 🎉 УСПЕХ!
 
-Время: ${new Date().toLocaleString('ru-RU')}
+Время: ${new Date().toLocaleString("ru-RU")}
 Результат: стоянка ${name} успешно забронирована!
     `;
 
     try {
         await bot.sendMessage(chatId, message);
     } catch (error) {
-        console.error('Ошибка отправки сообщения:', error);
+        logger.error("Ошибка отправки сообщения:", error);
     }
 }
