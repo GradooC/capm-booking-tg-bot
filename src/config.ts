@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import path from "path";
 
 dotenv.config({ debug: true });
 
@@ -14,4 +15,5 @@ export const CONFIG = {
     checkInterval: parseInt(process.env.CHECK_INTERVAL, 10),
     isDevelopment: process.env.NODE_ENV === "development",
     url: "https://admin3.zapytai.by/widget/createBooking",
+    logPath: path.resolve(__dirname, "../app.log"),
 };

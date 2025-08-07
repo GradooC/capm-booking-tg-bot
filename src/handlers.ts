@@ -4,10 +4,12 @@ import { pollUrls } from "./check-url";
 import { pollingManager } from "./polling-state";
 import { monitoredUrls } from "./urls";
 import { logger } from "./logger";
+import { createReadStream } from "fs";
 
 enum MessageText {
     Start = "🟢 Start",
     Stop = "🔴 Stop",
+    Logs = "📝 Get Logs",
 }
 
 export async function startHandler(msg: Message, bot: TelegramBot) {
@@ -25,6 +27,11 @@ export async function startHandler(msg: Message, bot: TelegramBot) {
                 [
                     {
                         text: MessageText.Stop,
+                    },
+                ],
+                [
+                    {
+                        text: MessageText.Logs,
                     },
                 ],
             ],
@@ -49,10 +56,21 @@ export async function stopHandler(msg: Message, bot: TelegramBot) {
                         text: MessageText.Start,
                     },
                 ],
+                [
+                    {
+                        text: MessageText.Logs,
+                    },
+                ],
             ],
             resize_keyboard: true,
         },
     });
+}
+
+export async function getLogsHandler(msg: Message, bot: TelegramBot) {
+    const chatId = msg.chat.id.toString();
+    await bot.sendDocument(chatId, createReadStream(CONFIG.logPath));
+    logger.info("📝 Logs sent");
 }
 
 export function messageHandler(msg: Message, bot: TelegramBot) {
@@ -66,6 +84,8 @@ export function messageHandler(msg: Message, bot: TelegramBot) {
         case MessageText.Start:
             startHandler(msg, bot);
             break;
+        case MessageText.Logs:
+            getLogsHandler(msg, bot);
         default:
             break;
     }
