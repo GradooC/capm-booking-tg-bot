@@ -1,5 +1,5 @@
 # Use official Node.js LTS image
-FROM node:22.17.1
+FROM node:22.17.1-slim
 
 WORKDIR /app
 
