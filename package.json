@@ -13,7 +13,6 @@
     "dependencies": {
         "axios": "^1.11.0",
         "dotenv": "^17.2.1",
-        "msw": "^2.10.4",
         "node-telegram-bot-api": "^0.66.0",
         "pino": "^9.7.0",
         "pino-pretty": "^13.1.1"
@@ -21,6 +20,7 @@
     "devDependencies": {
         "@types/node": "^22.13.14",
         "@types/node-telegram-bot-api": "^0.64.9",
+        "msw": "^2.10.4",
         "ts-node": "^10.9.0",
         "typescript": "^5.9.2"
     },
