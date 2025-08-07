@@ -52,7 +52,7 @@ jobs:
               git clone https://github.com/${{ github.repository }}.git app
             else
               cd /root/app
-              git pull origin main
+              git reset --hard origin/main
             fi
 
             cd /root/app
