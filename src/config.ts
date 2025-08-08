@@ -13,8 +13,11 @@ function getEnvVar(name: string): string {
 
 export const CONFIG = {
     token: getEnvVar("TELEGRAM_BOT_TOKEN"),
+    email: getEnvVar("EMAIL"),
+    fullName: getEnvVar("FULL_NAME"),
+    phoneNumber: getEnvVar("PHONE_NUMBER"),
     checkInterval: 1000,
-    isDevelopment: process.env.NODE_ENV === "development",
     url: "https://admin3.zapytai.by/widget/createBooking",
     logPath: path.resolve(__dirname, "../app.log"),
+    isDevelopment: process.env.NODE_ENV === "development",
 };

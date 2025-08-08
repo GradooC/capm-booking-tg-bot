@@ -2,6 +2,7 @@ import TelegramBot from "node-telegram-bot-api";
 import { CONFIG } from "./config";
 import { messageHandler, startHandler, stopHandler } from "./handlers";
 import { logger } from "./logger";
+import { commonPayload } from "./urls";
 
 function setupMocksIfNeeded() {
     if (CONFIG.isDevelopment) {
@@ -27,7 +28,7 @@ function main() {
 
     const bot = new TelegramBot(CONFIG.token, { polling: true });
 
-    logger.info("🤖 Telegram Monitor Bot запущен!");
+    logger.info({ commonPayload }, "🤖 Telegram Monitor Bot запущен!");
 
     bot.onText(/\/start/, (msg) => startHandler(msg, bot));
     bot.onText(/\/stop/, (msg) => stopHandler(msg, bot));

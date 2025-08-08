@@ -1,15 +1,15 @@
-
 import { CONFIG } from "./config";
 import { MonitoredUrl } from "./types";
 /**
  * List of monitored URLs and payloads
  */
-const { url } = CONFIG;
-const commonPayload = {
+const { url, fullName, phoneNumber, email } = CONFIG;
+
+export const commonPayload = {
+    fullName,
+    phoneNumber,
+    email,
     isAgree: true,
-    fullName: "пупкин",
-    phoneNumber: "+375 29 111 11 11",
-    email: "pupkin@mail.ru",
     startDate: "2025-08-04T21:00:00.000Z",
     endDate: "2025-08-06T21:00:00.000Z",
     numberOfChildren: "0",
@@ -39,6 +39,19 @@ export const monitoredUrls = [
             selectedCamping: {
                 text: "Хуторок - (8) мест",
                 value: "44",
+                capacity: 8,
+            },
+            numberOfAdult: "8",
+            ...commonPayload,
+        },
+    },
+    {
+        name: "Купальская ночь",
+        url,
+        payload: {
+            selectedCamping: {
+                text: "Купальская ночь - (8) мест",
+                value: "128",
                 capacity: 8,
             },
             numberOfAdult: "8",

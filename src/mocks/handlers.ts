@@ -3,8 +3,9 @@ import { MonitoredUrl, SelectedCamping } from "../types";
 import { CONFIG } from "../config";
 
 const requestCounters = {
-    "43": 10,
-    "44": 5,
+    "43": 15,
+    "44": 10,
+    "128": 8,
 } satisfies Record<SelectedCamping["value"], number>;
 
 export const handlers = [

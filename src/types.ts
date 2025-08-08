@@ -1,4 +1,3 @@
-
 /**
  * API response type
  */
@@ -10,16 +9,14 @@ export type ApiResponse = {
     targetUrl: string | null;
 };
 
-
 /**
  * Camping selection type
  */
 export type SelectedCamping = {
     text: string;
-    value: "43" | "44";
+    value: "43" | "44" | "128";
     capacity: number;
 };
-
 
 /**
  * Monitored URL type
