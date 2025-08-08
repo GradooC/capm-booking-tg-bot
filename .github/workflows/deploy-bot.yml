@@ -52,18 +52,26 @@ jobs:
               git clone https://github.com/${{ github.repository }}.git app
             else
               cd /root/app
+              git fetch origin main
               git reset --hard origin/main
             fi
 
             cd /root/app
-            docker build -t tg-bot .
 
-            # Stop and remove existing container if it exists
-            docker stop tg-bot 2>/dev/null || true
-            docker rm tg-bot 2>/dev/null || true
+            # Generate .env for docker compose (required by the app)
+            rm -f .env
+            {
+              echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}";
+              echo "EMAIL=${{ secrets.EMAIL }}";
+              echo "FULL_NAME=${{ secrets.FULL_NAME }}";
+              echo "PHONE_NUMBER=${{ secrets.PHONE_NUMBER }}";
+            } > .env
 
-            # Run new container
-            docker run -d --rm --name tg-bot -p 3000:3000 \
-              -e TELEGRAM_BOT_TOKEN="${{ secrets.TELEGRAM_BOT_TOKEN }}" \
-              -e CHECK_INTERVAL="${{ secrets.CHECK_INTERVAL }}" \
-              tg-bot
+            # Ensure data directory exists on host for persistence
+            mkdir -p ./data
+
+            # Build and (re)start via docker compose
+            docker compose up -d --build --remove-orphans
+
+            # Show recent logs for quick diagnostics
+            docker compose logs --no-log-prefix --timestamps --since 5m | tail -n 200 || true

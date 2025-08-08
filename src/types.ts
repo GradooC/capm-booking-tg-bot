@@ -1,3 +1,9 @@
+export enum CampValue {
+    Perovoloka = "43",
+    Khutorok = "44",
+    KupalskayaNoc = "128",
+}
+
 /**
  * API response type
  */
@@ -14,7 +20,7 @@ export type ApiResponse = {
  */
 export type SelectedCamping = {
     text: string;
-    value: "43" | "44" | "128";
+    value: CampValue;
     capacity: number;
 };
 

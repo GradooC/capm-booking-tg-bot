@@ -6,10 +6,12 @@ import { logger } from "./logger";
  */
 export async function sendSuccessNotification(
     bot: TelegramBot,
-    chatId: string,
+    chatId: number,
     name: string
-): Promise<void> {
-    const message = `\n🎉 УСПЕХ!\n\nВремя: ${new Date().toLocaleString("ru-RU")}\nРезультат: стоянка <b><i>${name}</i></b> успешно забронирована! ⛺️`;
+) {
+    const message = `\n🎉 УСПЕХ!\n\nВремя: ${new Date().toLocaleString(
+        "ru-RU"
+    )}\nРезультат: стоянка <b><i>${name}</i></b> успешно забронирована! ⛺️`;
     try {
         await bot.sendMessage(chatId, message, { parse_mode: "HTML" });
     } catch (error) {

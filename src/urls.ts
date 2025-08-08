@@ -1,8 +1,6 @@
 import { CONFIG } from "./config";
-import { MonitoredUrl } from "./types";
-/**
- * List of monitored URLs and payloads
- */
+import { CampValue, MonitoredUrl } from "./types";
+
 const { url, fullName, phoneNumber, email } = CONFIG;
 
 export const commonPayload = {
@@ -25,7 +23,7 @@ export const monitoredUrls = [
         payload: {
             selectedCamping: {
                 text: "Переволока - (6) мест",
-                value: "43",
+                value: CampValue.Perovoloka,
                 capacity: 6,
             },
             numberOfAdult: "6",
@@ -38,7 +36,7 @@ export const monitoredUrls = [
         payload: {
             selectedCamping: {
                 text: "Хуторок - (8) мест",
-                value: "44",
+                value: CampValue.Khutorok,
                 capacity: 8,
             },
             numberOfAdult: "8",
@@ -51,7 +49,7 @@ export const monitoredUrls = [
         payload: {
             selectedCamping: {
                 text: "Купальская ночь - (8) мест",
-                value: "128",
+                value: CampValue.KupalskayaNoc,
                 capacity: 8,
             },
             numberOfAdult: "8",
