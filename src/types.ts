@@ -1,17 +1,29 @@
+
+/**
+ * API response type
+ */
 export type ApiResponse = {
     isSuccessful: boolean;
     message: string | null;
     errorMessage: string | null;
-    data: any | null;
+    data: unknown | null;
     targetUrl: string | null;
 };
 
+
+/**
+ * Camping selection type
+ */
 export type SelectedCamping = {
     text: string;
     value: "43" | "44";
     capacity: number;
 };
 
+
+/**
+ * Monitored URL type
+ */
 export type MonitoredUrl = {
     name: string;
     url: string;

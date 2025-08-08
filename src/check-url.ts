@@ -6,16 +6,21 @@ import { logger } from "./logger";
 import { pollingManager } from "./polling-state";
 import { sendSuccessNotification } from "./notifications";
 
+/**
+ * Options for polling URLs
+ */
 type PollUrlsOptions = {
     bot: TelegramBot;
     chatId: string;
 };
 
+/**
+ * Polls all monitored URLs until success response is received
+ */
 export async function pollUrls(
     urlArray: MonitoredUrl[],
     { bot, chatId }: PollUrlsOptions
-) {
-    // Create a promise for each URL that will resolve when it gets {isSuccess: true}
+): Promise<void> {
     const pollingPromises = urlArray.map(({ url, name, payload }) => {
         return new Promise((resolve) => {
             let isPolling = true;
@@ -25,13 +30,9 @@ export async function pollUrls(
 
                 try {
                     const response = await axios.post(url, payload, {
-                        timeout: 10000, // 10 second timeout
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
+                        timeout: 10000,
+                        headers: { "Content-Type": "application/json" },
                     });
-
-                    // Check if we got the success response
                     if (response.data.isSuccess) {
                         logger.info(
                             `✅ Success response received from ${name}`
@@ -41,41 +42,31 @@ export async function pollUrls(
                         sendSuccessNotification(bot, chatId, name);
                         return;
                     }
-
                     logger.info(
                         response.data,
                         `⏳ Polling ${name} - waiting for success response...`
                     );
                 } catch (error) {
-                    // Handle timeout and other errors without throwing
                     if (isAxiosError(error)) {
-                        switch (true) {
-                            case error.code === "ECONNABORTED":
-                            case error.message.includes("timeout"):
-                                logger.warn(
-                                    `⏰ Request timeout for ${name} (10s) - continuing to poll...`
-                                );
-                                break;
-                            case Boolean(error.response):
-                                // Server responded with error status
-
-                                logger.warn(
-                                    `❌ Server error for ${name} (${error.response?.status}) - continuing to poll...`
-                                );
-                                break;
-                            case Boolean(error.request):
-                                // Network error
-                                logger.warn(
-                                    `🌐 Network error for ${name} - continuing to poll...`
-                                );
-                                break;
-                            default:
-                                logger.warn(
-                                    `❌ Error polling ${name}:`,
-                                    error.message,
-                                    "- continuing to poll..."
-                                );
-                                break;
+                        if (
+                            error.code === "ECONNABORTED" ||
+                            error.message.includes("timeout")
+                        ) {
+                            logger.warn(
+                                `⏰ Request timeout for ${name} (10s) - continuing to poll...`
+                            );
+                        } else if (error.response) {
+                            logger.warn(
+                                `❌ Server error for ${name} (${error.response?.status}) - continuing to poll...`
+                            );
+                        } else if (error.request) {
+                            logger.warn(
+                                `🌐 Network error for ${name} - continuing to poll...`
+                            );
+                        } else {
+                            logger.warn(
+                                `❌ Error polling ${name}: ${error.message} - continuing to poll...`
+                            );
                         }
                     } else {
                         logger.error(
@@ -84,19 +75,15 @@ export async function pollUrls(
                         );
                     }
                 }
-
-                // Schedule next poll if still polling
                 if (isPolling) {
                     setTimeout(poll, CONFIG.checkInterval);
                 }
             };
 
-            // Start polling immediately
             poll();
         });
     });
 
-    // Wait for all URLs to complete
     await Promise.all(pollingPromises);
     logger.info("🎉 All URLs have returned success responses!");
 }

@@ -1,3 +1,7 @@
+
+/**
+ * Logger instance (pino)
+ */
 import pino from "pino";
 import { CONFIG } from "./config";
 

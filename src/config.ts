@@ -3,16 +3,17 @@ import path from "path";
 
 dotenv.config({ debug: true });
 
-if (!process.env.TELEGRAM_BOT_TOKEN) {
-    throw new Error("TELEGRAM_BOT_TOKEN is not set in environment variables");
-}
-if (!process.env.CHECK_INTERVAL) {
-    throw new Error("CHECK_INTERVAL is not set in environment variables");
+function getEnvVar(name: string): string {
+    const value = process.env[name];
+    if (!value) {
+        throw new Error(`${name} is not set in environment variables`);
+    }
+    return value;
 }
 
 export const CONFIG = {
-    token: process.env.TELEGRAM_BOT_TOKEN,
-    checkInterval: parseInt(process.env.CHECK_INTERVAL, 10),
+    token: getEnvVar("TELEGRAM_BOT_TOKEN"),
+    checkInterval: 1000,
     isDevelopment: process.env.NODE_ENV === "development",
     url: "https://admin3.zapytai.by/widget/createBooking",
     logPath: path.resolve(__dirname, "../app.log"),

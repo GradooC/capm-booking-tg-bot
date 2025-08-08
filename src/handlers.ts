@@ -6,13 +6,20 @@ import { monitoredUrls } from "./urls";
 import { logger } from "./logger";
 import { createReadStream } from "fs";
 
-enum MessageText {
+
+/**
+ * Enum for bot message texts
+ */
+export enum MessageText {
     Start = "🟢 Start",
     Stop = "🔴 Stop",
     Logs = "📝 Get Logs",
 }
 
-export async function startHandler(msg: Message, bot: TelegramBot) {
+/**
+ * Handles /start command
+ */
+export async function startHandler(msg: Message, bot: TelegramBot): Promise<void> {
     const chatId = msg.chat.id.toString();
     const message = `🟢 Мониторинг запущен!\nИнтервал проверки: ${
         CONFIG.checkInterval / 1000
@@ -41,7 +48,10 @@ export async function startHandler(msg: Message, bot: TelegramBot) {
     pollUrls(monitoredUrls, { bot, chatId });
 }
 
-export async function stopHandler(msg: Message, bot: TelegramBot) {
+/**
+ * Handles /stop command
+ */
+export async function stopHandler(msg: Message, bot: TelegramBot): Promise<void> {
     const chatId = msg.chat.id.toString();
     const message = "🔴 Мониторинг остановлен!";
 
@@ -67,16 +77,21 @@ export async function stopHandler(msg: Message, bot: TelegramBot) {
     });
 }
 
-export async function getLogsHandler(msg: Message, bot: TelegramBot) {
+/**
+ * Handles logs request
+ */
+export async function getLogsHandler(msg: Message, bot: TelegramBot): Promise<void> {
     const chatId = msg.chat.id.toString();
     await bot.sendDocument(chatId, createReadStream(CONFIG.logPath));
     logger.info("📝 Logs sent");
 }
 
-export function messageHandler(msg: Message, bot: TelegramBot) {
-    const chatId = msg.chat.id;
-    const text = msg.text;
 
+/**
+ * Handles generic message events
+ */
+export function messageHandler(msg: Message, bot: TelegramBot): void {
+    const text = msg.text;
     switch (text) {
         case MessageText.Stop:
             stopHandler(msg, bot);
@@ -86,6 +101,7 @@ export function messageHandler(msg: Message, bot: TelegramBot) {
             break;
         case MessageText.Logs:
             getLogsHandler(msg, bot);
+            break;
         default:
             break;
     }

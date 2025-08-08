@@ -1,6 +1,9 @@
+
 import { CONFIG } from "./config";
 import { MonitoredUrl } from "./types";
-
+/**
+ * List of monitored URLs and payloads
+ */
 const { url } = CONFIG;
 const commonPayload = {
     isAgree: true,
