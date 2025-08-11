@@ -3,16 +3,19 @@ import { CONFIG } from "./config";
 import { logger } from "./logger";
 import { createReadStream } from "fs";
 import { Db } from "./db";
-import { pollUrls } from "./check-url";
 import { monitoredUrls } from "./urls";
+import { pollCampingUrl } from "./poll-camping-url";
+import { CampValue, valueToNameMap } from "./types";
 
 /**
  * Enum for bot message texts
  */
-export enum MessageText {
+enum MessageText {
     Start = "🟢 Start",
     Stop = "🔴 Stop",
     Logs = "📝 Get Logs",
+    GetStatus = "📊 Get Status",
+    ResetCampState = "🔄 Reset Camp State",
 }
 
 type HandlerArgs = {
@@ -20,6 +23,18 @@ type HandlerArgs = {
     bot: TelegramBot;
     db: Db;
 };
+
+const commonButtons = [
+    {
+        text: MessageText.Logs,
+    },
+    {
+        text: MessageText.GetStatus,
+    },
+    {
+        text: MessageText.ResetCampState,
+    },
+];
 
 export async function startHandler({ bot, msg, db }: HandlerArgs) {
     await db.addChatId(msg.chat.id);
@@ -36,11 +51,7 @@ export async function startHandler({ bot, msg, db }: HandlerArgs) {
                             text: MessageText.Start,
                         },
                     ],
-                    [
-                        {
-                            text: MessageText.Logs,
-                        },
-                    ],
+                    commonButtons,
                 ],
                 resize_keyboard: true,
             },
@@ -51,10 +62,41 @@ export async function startHandler({ bot, msg, db }: HandlerArgs) {
 /**
  * Handles /start command
  */
-export async function startPollingHandler({ msg, bot, db }: HandlerArgs) {
+async function startPollingHandler({ msg, bot, db }: HandlerArgs) {
     if (db.state.isPollingOn) {
-        bot.sendMessage(msg.chat.id, "🟢 Мониторинг уже запущен!");
-        return;
+        return bot.sendMessage(msg.chat.id, "🟢 Мониторинг уже запущен!", {
+            reply_markup: {
+                keyboard: [
+                    [
+                        {
+                            text: MessageText.Stop,
+                        },
+                    ],
+                    commonButtons,
+                ],
+                resize_keyboard: true,
+            },
+        });
+    }
+
+    if (Object.values(db.state.campState).every((state) => !state)) {
+        return bot.sendMessage(
+            msg.chat.id,
+            "🔴 Все стоянки уже забронированы!\nЕсли хотите начать заново - сбросьте состояние бота.",
+            {
+                reply_markup: {
+                    keyboard: [
+                        [
+                            {
+                                text: MessageText.Start,
+                            },
+                        ],
+                        commonButtons,
+                    ],
+                    resize_keyboard: true,
+                },
+            }
+        );
     }
 
     const { chatIds } = db.state;
@@ -74,26 +116,49 @@ export async function startPollingHandler({ msg, bot, db }: HandlerArgs) {
                             text: MessageText.Stop,
                         },
                     ],
-                    [
-                        {
-                            text: MessageText.Logs,
-                        },
-                    ],
+                    commonButtons,
                 ],
                 resize_keyboard: true,
             },
         });
     });
 
-    pollUrls({ monitoredUrls, bot, db });
+    await Promise.all(
+        monitoredUrls.map((monitoredUrl) =>
+            pollCampingUrl({ monitoredUrl, bot, db })
+        )
+    );
+
+    chatIds.forEach((chatId) => {
+        bot.sendMessage(
+            chatId,
+            "Все стоянки успешно забронированы ⛺️\nМониторинг завершен!"
+        );
+    });
+
+    stopPollingHandler({ msg, bot, db });
+
+    logger.info("🎉 All URLs have returned success responses!");
 }
 
 /**
  * Handles /stop command
  */
-export async function stopPollingHandler({ msg, bot, db }: HandlerArgs) {
+async function stopPollingHandler({ msg, bot, db }: HandlerArgs) {
     if (!db.state.isPollingOn) {
-        bot.sendMessage(msg.chat.id, "🔴 Мониторинг уже остановлен!");
+        bot.sendMessage(msg.chat.id, "🔴 Мониторинг уже остановлен!", {
+            reply_markup: {
+                keyboard: [
+                    [
+                        {
+                            text: MessageText.Start,
+                        },
+                    ],
+                    commonButtons,
+                ],
+                resize_keyboard: true,
+            },
+        });
         return;
     }
 
@@ -112,11 +177,7 @@ export async function stopPollingHandler({ msg, bot, db }: HandlerArgs) {
                             text: MessageText.Start,
                         },
                     ],
-                    [
-                        {
-                            text: MessageText.Logs,
-                        },
-                    ],
+                    commonButtons,
                 ],
                 resize_keyboard: true,
             },
@@ -127,10 +188,39 @@ export async function stopPollingHandler({ msg, bot, db }: HandlerArgs) {
 /**
  * Handles logs request
  */
-export async function getLogsHandler({ msg, bot }: HandlerArgs) {
+async function getLogsHandler({ msg, bot }: HandlerArgs) {
     const chatId = msg.chat.id;
     await bot.sendDocument(chatId, createReadStream(CONFIG.logPath));
     logger.info(`📝 Logs sent to chat ${chatId}`);
+}
+
+async function getStatusHandler({ msg, bot, db }: HandlerArgs) {
+    const chatId = msg.chat.id;
+    const { isPollingOn, campState } = db.state;
+
+    const campInfo = Object.entries(campState)
+        .map(
+            ([value, state]) =>
+                `· ${valueToNameMap[value as CampValue]}: ${
+                    state ? "⌛️ В процессе" : "✅ Забронирована"
+                }`
+        )
+        .join("\n");
+    const message = `📊 Статус мониторинга:\n\nМониторинг: ${
+        isPollingOn ? "🟢 Включен" : "🔴 Остановлен"
+    }\n\nСостояние стоянок:\n\n${campInfo}`;
+
+    await bot.sendMessage(chatId, message);
+    logger.info(`📊 Status sent to chat ${chatId}`);
+}
+
+async function resetCampStateHandler({ msg, bot, db }: HandlerArgs) {
+    await db.resetCampState();
+    await bot.sendMessage(msg.chat.id, "🔄 Состояние стоянок сброшено!");
+    if (db.state.isPollingOn) {
+        stopPollingHandler({ msg, bot, db });
+    }
+    logger.info("🔄 Camp state reset");
 }
 
 /**
@@ -147,6 +237,12 @@ export function messageHandler(args: HandlerArgs) {
             break;
         case MessageText.Logs:
             getLogsHandler(args);
+            break;
+        case MessageText.GetStatus:
+            getStatusHandler(args);
+            break;
+        case MessageText.ResetCampState:
+            resetCampStateHandler(args);
             break;
         default:
             break;

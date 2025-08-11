@@ -78,4 +78,13 @@ export class Db {
     public isPollingActive(value: CampValue) {
         return this._state.isPollingOn && this._state.campState[value];
     }
+
+    public async resetCampState() {
+        this._state.campState = {
+            [CampValue.Khutorok]: true,
+            [CampValue.KupalskayaNoc]: true,
+            [CampValue.Perovoloka]: true,
+        };
+        await this.saveState();
+    }
 }

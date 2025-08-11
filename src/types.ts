@@ -4,6 +4,12 @@ export enum CampValue {
     KupalskayaNoc = "128",
 }
 
+export const valueToNameMap = {
+    [CampValue.Perovoloka]: "Переволока",
+    [CampValue.Khutorok]: "Хуторок",
+    [CampValue.KupalskayaNoc]: "Купальская Ночь",
+};
+
 /**
  * API response type
  */

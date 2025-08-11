@@ -4,7 +4,7 @@ import { messageHandler, startHandler } from "./handlers";
 import { logger } from "./logger";
 import { commonPayload, monitoredUrls } from "./urls";
 import { Db } from "./db";
-import { pollUrls } from "./check-url";
+import { pollCampingUrl } from "./poll-camping-url";
 
 function setupMocksIfNeeded() {
     if (CONFIG.isDevelopment) {
@@ -36,7 +36,9 @@ function main() {
     bot.onText(/\/start/, (msg) => startHandler({ msg, bot, db }));
     bot.on("message", (msg) => messageHandler({ msg, bot, db }));
 
-    pollUrls({ monitoredUrls, bot, db });
+    monitoredUrls.map((monitoredUrl) =>
+        pollCampingUrl({ monitoredUrl, bot, db })
+    );
 
     setupProcessSignals();
 }
