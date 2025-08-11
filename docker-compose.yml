@@ -14,5 +14,6 @@ services:
       - .env
     environment:
       - NODE_ENV=production
+      - TZ=Europe/Minsk
     volumes:
       - ./data:/app/data

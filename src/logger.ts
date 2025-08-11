@@ -1,7 +1,3 @@
-
-/**
- * Logger instance (pino)
- */
 import pino from "pino";
 import { CONFIG } from "./config";
 
@@ -11,7 +7,7 @@ const transport = pino.transport({
             target: "pino-pretty",
             options: {
                 colorize: true,
-                translateTime: "yyyy-mm-dd HH:MM:ss",
+                translateTime: "SYS:yyyy-mm-dd HH:MM:ss",
                 ignore: "pid,hostname",
             },
         },
@@ -20,7 +16,7 @@ const transport = pino.transport({
             options: {
                 colorize: false,
                 destination: CONFIG.logPath,
-                translateTime: "yyyy-mm-dd HH:MM:ss",
+                translateTime: "SYS:yyyy-mm-dd HH:MM:ss",
                 ignore: "pid,hostname",
             },
         },
