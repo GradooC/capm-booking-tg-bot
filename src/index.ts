@@ -36,9 +36,11 @@ function main() {
     bot.onText(/\/start/, (msg) => startHandler({ msg, bot, db }));
     bot.on("message", (msg) => messageHandler({ msg, bot, db }));
 
-    monitoredUrls.map((monitoredUrl) =>
-        pollCampingUrl({ monitoredUrl, bot, db })
-    );
+    if (db.state.isPollingOn) {
+        monitoredUrls.map((monitoredUrl) =>
+            pollCampingUrl({ monitoredUrl, bot, db })
+        );
+    }
 
     setupProcessSignals();
 }
