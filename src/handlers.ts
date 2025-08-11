@@ -107,7 +107,7 @@ async function startPollingHandler({ msg, bot, db }: HandlerArgs) {
 
     await db.startPolling();
 
-    chatIds.forEach((chatId) => {
+    const startMessagePromises = chatIds.map((chatId) =>
         bot.sendMessage(chatId, message, {
             reply_markup: {
                 keyboard: [
@@ -120,23 +120,24 @@ async function startPollingHandler({ msg, bot, db }: HandlerArgs) {
                 ],
                 resize_keyboard: true,
             },
-        });
-    });
+        })
+    );
 
-    await Promise.all(
+    await Promise.allSettled(startMessagePromises);
+
+    await Promise.allSettled(
         monitoredUrls.map((monitoredUrl) =>
             pollCampingUrl({ monitoredUrl, bot, db })
         )
     );
 
-    chatIds.forEach((chatId) => {
-        bot.sendMessage(
-            chatId,
-            "Все стоянки успешно забронированы ⛺️\nМониторинг завершен!"
-        );
-    });
+    const successMessagePromises = chatIds.map((chatId) =>
+        bot.sendMessage(chatId, "Все стоянки успешно забронированы ⛺️")
+    );
 
-    stopPollingHandler({ msg, bot, db });
+    await Promise.allSettled(successMessagePromises);
+
+    await stopPollingHandler({ msg, bot, db });
 
     logger.info("🎉 All URLs have returned success responses!");
 }

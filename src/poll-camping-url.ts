@@ -18,7 +18,7 @@ export function pollCampingUrl({ monitoredUrl, db, bot }: PollUrlsOptions) {
     const { value } = payload.selectedCamping;
     const { chatIds } = db.state;
 
-    return new Promise(async (resolve) => {
+    return new Promise((resolve) => {
         const poll = async () => {
             if (!db.isPollingActive(value)) return;
 

@@ -9,6 +9,7 @@ import { pollCampingUrl } from "./poll-camping-url";
 function setupMocksIfNeeded() {
     if (CONFIG.isDevelopment) {
         logger.info("🔧 Starting in development mode with mocks...");
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const { server } = require("./mocks/server");
         server.listen({ onUnhandledRequest: "bypass" });
     }
