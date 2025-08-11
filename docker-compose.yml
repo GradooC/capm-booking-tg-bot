@@ -5,14 +5,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    mem_limit: 512m
+    cpus: 0.75
+    restart: always
     image: tg-bot:latest
     container_name: tg-bot
-    restart: unless-stopped
     env_file:
       - .env
     environment:
       - NODE_ENV=production
     volumes:
       - ./data:/app/data
-
-
