@@ -6,22 +6,12 @@ import { Db } from "./db";
 import { monitoredUrls } from "./urls";
 import { pollCampingUrl } from "./poll-camping-url";
 import { CampValue, valueToNameMap } from "./types";
+import { BOT_COMMANDS, KeyboardLayouts } from "./keyboard-layouts";
 
 function getErrorMessage(error: unknown): string {
     if (error instanceof Error) return error.message;
     return String(error);
 }
-
-/**
- * Bot command identifiers
- */
-const BOT_COMMANDS = {
-    START: "🟢 Start",
-    STOP: "🔴 Stop",
-    LOGS: "📝 Get Logs",
-    STATUS: "📊 Get Status",
-    RESET: "🔄 Reset Camp State",
-} as const;
 
 /**
  * Bot response messages
@@ -47,32 +37,6 @@ type HandlerArgs = {
 };
 
 type MessageHandler = (args: HandlerArgs) => Promise<void> | void;
-
-/**
- * Keyboard layouts for different bot states
- */
-class KeyboardLayouts {
-    private static createKeyboard(
-        buttons: string[][]
-    ): TelegramBot.ReplyKeyboardMarkup {
-        return {
-            keyboard: buttons.map((row) => row.map((text) => ({ text }))),
-            resize_keyboard: true,
-        };
-    }
-
-    static get commonButtons(): string[] {
-        return [BOT_COMMANDS.LOGS, BOT_COMMANDS.STATUS, BOT_COMMANDS.RESET];
-    }
-
-    static get startKeyboard(): TelegramBot.ReplyKeyboardMarkup {
-        return this.createKeyboard([[BOT_COMMANDS.START], this.commonButtons]);
-    }
-
-    static get stopKeyboard(): TelegramBot.ReplyKeyboardMarkup {
-        return this.createKeyboard([[BOT_COMMANDS.STOP], this.commonButtons]);
-    }
-}
 
 /**
  * Service class for sending messages to multiple chats
@@ -309,8 +273,10 @@ async function startMonitoring(bot: TelegramBot, db: Db) {
     // Notify success and stop monitoring
     await notificationService.notifyAllChats(
         chatIds,
-        MESSAGES.ALL_CAMPS_SUCCESS
+        MESSAGES.ALL_CAMPS_SUCCESS,
+        { reply_markup: KeyboardLayouts.startKeyboard }
     );
+
     await db.stopPolling();
 
     logger.info("🎉 All URLs have returned success responses!");
