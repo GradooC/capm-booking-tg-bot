@@ -1,13 +1,13 @@
 export enum CampValue {
-    Perovoloka = "43",
-    Khutorok = "44",
-    KupalskayaNoc = "128",
+    Perovoloka = '43',
+    Khutorok = '44',
+    KupalskayaNoc = '128',
 }
 
 export const valueToNameMap = {
-    [CampValue.Perovoloka]: "Переволока",
-    [CampValue.Khutorok]: "Хуторок",
-    [CampValue.KupalskayaNoc]: "Купальская Ночь",
+    [CampValue.Perovoloka]: 'Переволока',
+    [CampValue.Khutorok]: 'Хуторок',
+    [CampValue.KupalskayaNoc]: 'Купальская Ночь',
 };
 
 /**

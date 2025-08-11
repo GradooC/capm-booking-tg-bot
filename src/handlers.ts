@@ -1,12 +1,12 @@
-import TelegramBot, { type Message } from "node-telegram-bot-api";
-import { CONFIG } from "./config";
-import { logger } from "./logger";
-import { createReadStream } from "fs";
-import { Db } from "./db";
-import { monitoredUrls } from "./urls";
-import { pollCampingUrl } from "./poll-camping-url";
-import { CampValue, valueToNameMap } from "./types";
-import { BOT_COMMANDS, KeyboardLayouts } from "./keyboard-layouts";
+import TelegramBot, { type Message } from 'node-telegram-bot-api';
+import { CONFIG } from './config';
+import { logger } from './logger';
+import { createReadStream } from 'fs';
+import { Db } from './db';
+import { monitoredUrls } from './urls';
+import { pollCampingUrl } from './poll-camping-url';
+import { CampValue, valueToNameMap } from './types';
+import { BOT_COMMANDS, KeyboardLayouts } from './keyboard-layouts';
 
 function getErrorMessage(error: unknown): string {
     if (error instanceof Error) return error.message;
@@ -18,16 +18,16 @@ function getErrorMessage(error: unknown): string {
  */
 const MESSAGES = {
     WELCOME:
-        "👋 Привет! Я бот для мониторинга стоянок. Используй команды ниже для управления мониторингом.",
+        '👋 Привет! Я бот для мониторинга стоянок. Используй команды ниже для управления мониторингом.',
     MONITORING_STARTED: (interval: number) =>
         `🟢 Мониторинг запущен!\nИнтервал проверки: ${interval} сек`,
-    MONITORING_STOPPED: "🔴 Мониторинг остановлен!",
-    MONITORING_ALREADY_STARTED: "❇️ Мониторинг уже запущен!",
-    MONITORING_ALREADY_STOPPED: "❌ Мониторинг уже остановлен!",
+    MONITORING_STOPPED: '🔴 Мониторинг остановлен!',
+    MONITORING_ALREADY_STARTED: '❇️ Мониторинг уже запущен!',
+    MONITORING_ALREADY_STOPPED: '❌ Мониторинг уже остановлен!',
     ALL_CAMPS_BOOKED:
-        "❎ Все стоянки уже забронированы!\nЕсли хотите начать заново - сбросьте состояние бота.",
-    ALL_CAMPS_SUCCESS: "Все стоянки успешно забронированы 🏕️",
-    STATE_RESET: "🔄 Состояние стоянок сброшено!",
+        '❎ Все стоянки уже забронированы!\nЕсли хотите начать заново - сбросьте состояние бота.',
+    ALL_CAMPS_SUCCESS: 'Все стоянки успешно забронированы 🏕️',
+    STATE_RESET: '🔄 Состояние стоянок сброшено!',
 } as const;
 
 type HandlerArgs = {
@@ -47,17 +47,14 @@ class NotificationService {
     async notifyAllChats(
         chatIds: number[],
         message: string,
-        options?: TelegramBot.SendMessageOptions
+        options?: TelegramBot.SendMessageOptions,
     ) {
         const promises = chatIds.map((chatId) =>
             this.bot
                 .sendMessage(chatId, message, options)
                 .catch((error) =>
-                    logger.warn(
-                        { chatId, error: error.message },
-                        "Failed to send message to chat"
-                    )
-                )
+                    logger.warn({ chatId, error: error.message }, 'Failed to send message to chat'),
+                ),
         );
 
         await Promise.allSettled(promises);
@@ -70,23 +67,16 @@ class NotificationService {
 export async function startHandler({ bot, msg, db }: HandlerArgs) {
     try {
         await db.addChatId(msg.chat.id);
-        logger.info({ chatId: msg.chat.id }, "💬 New chat id added");
+        logger.info({ chatId: msg.chat.id }, '💬 New chat id added');
 
         await bot.sendMessage(msg.chat.id, MESSAGES.WELCOME, {
             reply_markup: KeyboardLayouts.startKeyboard,
         });
     } catch (error) {
-        const errorMessage =
-            error instanceof Error ? error.message : String(error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
 
-        logger.error(
-            { error: errorMessage, chatId: msg.chat.id },
-            "Error in start handler"
-        );
-        await bot.sendMessage(
-            msg.chat.id,
-            "❌ Произошла ошибка при регистрации"
-        );
+        logger.error({ error: errorMessage, chatId: msg.chat.id }, 'Error in start handler');
+        await bot.sendMessage(msg.chat.id, '❌ Произошла ошибка при регистрации');
     }
 }
 
@@ -96,13 +86,9 @@ export async function startHandler({ bot, msg, db }: HandlerArgs) {
 async function startPollingHandler({ msg, bot, db }: HandlerArgs) {
     try {
         if (db.state.isPollingOn) {
-            await bot.sendMessage(
-                msg.chat.id,
-                MESSAGES.MONITORING_ALREADY_STARTED,
-                {
-                    reply_markup: KeyboardLayouts.stopKeyboard,
-                }
-            );
+            await bot.sendMessage(msg.chat.id, MESSAGES.MONITORING_ALREADY_STARTED, {
+                reply_markup: KeyboardLayouts.stopKeyboard,
+            });
             return;
         }
 
@@ -115,11 +101,8 @@ async function startPollingHandler({ msg, bot, db }: HandlerArgs) {
 
         await startMonitoring(bot, db);
     } catch (error) {
-        logger.error(
-            { error: getErrorMessage(error) },
-            "Error starting monitoring"
-        );
-        await bot.sendMessage(msg.chat.id, "❌ Ошибка при запуске мониторинга");
+        logger.error({ error: getErrorMessage(error) }, 'Error starting monitoring');
+        await bot.sendMessage(msg.chat.id, '❌ Ошибка при запуске мониторинга');
     }
 }
 
@@ -129,26 +112,16 @@ async function startPollingHandler({ msg, bot, db }: HandlerArgs) {
 async function stopPollingHandler({ msg, bot, db }: HandlerArgs) {
     try {
         if (!db.state.isPollingOn) {
-            await bot.sendMessage(
-                msg.chat.id,
-                MESSAGES.MONITORING_ALREADY_STOPPED,
-                {
-                    reply_markup: KeyboardLayouts.startKeyboard,
-                }
-            );
+            await bot.sendMessage(msg.chat.id, MESSAGES.MONITORING_ALREADY_STOPPED, {
+                reply_markup: KeyboardLayouts.startKeyboard,
+            });
             return;
         }
 
         await stopMonitoring(bot, db);
     } catch (error) {
-        logger.error(
-            { error: getErrorMessage(error) },
-            "Error stopping monitoring"
-        );
-        await bot.sendMessage(
-            msg.chat.id,
-            "❌ Ошибка при остановке мониторинга"
-        );
+        logger.error({ error: getErrorMessage(error) }, 'Error stopping monitoring');
+        await bot.sendMessage(msg.chat.id, '❌ Ошибка при остановке мониторинга');
     }
 }
 
@@ -158,13 +131,10 @@ async function stopPollingHandler({ msg, bot, db }: HandlerArgs) {
 async function getLogsHandler({ msg, bot }: HandlerArgs) {
     try {
         await bot.sendDocument(msg.chat.id, createReadStream(CONFIG.logPath));
-        logger.info({ chatId: msg.chat.id }, "📝 Logs sent to chat");
+        logger.info({ chatId: msg.chat.id }, '📝 Logs sent to chat');
     } catch (error) {
-        logger.error(
-            { error: getErrorMessage(error), chatId: msg.chat.id },
-            "Error sending logs"
-        );
-        await bot.sendMessage(msg.chat.id, "❌ Ошибка при отправке логов");
+        logger.error({ error: getErrorMessage(error), chatId: msg.chat.id }, 'Error sending logs');
+        await bot.sendMessage(msg.chat.id, '❌ Ошибка при отправке логов');
     }
 }
 
@@ -175,13 +145,13 @@ async function getStatusHandler({ msg, bot, db }: HandlerArgs) {
     try {
         const statusMessage = buildStatusMessage(db);
         await bot.sendMessage(msg.chat.id, statusMessage);
-        logger.info({ chatId: msg.chat.id }, "📊 Status sent to chat");
+        logger.info({ chatId: msg.chat.id }, '📊 Status sent to chat');
     } catch (error) {
         logger.error(
             { error: getErrorMessage(error), chatId: msg.chat.id },
-            "Error sending status"
+            'Error sending status',
         );
-        await bot.sendMessage(msg.chat.id, "❌ Ошибка при получении статуса");
+        await bot.sendMessage(msg.chat.id, '❌ Ошибка при получении статуса');
     }
 }
 
@@ -197,13 +167,10 @@ async function resetCampStateHandler({ msg, bot, db }: HandlerArgs) {
             await stopPollingHandler({ msg, bot, db });
         }
 
-        logger.info("🔄 Camp state reset");
+        logger.info('🔄 Camp state reset');
     } catch (error) {
-        logger.error(
-            { error: getErrorMessage(error) },
-            "Error resetting camp state"
-        );
-        await bot.sendMessage(msg.chat.id, "❌ Ошибка при сбросе состояния");
+        logger.error({ error: getErrorMessage(error) }, 'Error resetting camp state');
+        await bot.sendMessage(msg.chat.id, '❌ Ошибка при сбросе состояния');
     }
 }
 
@@ -220,17 +187,14 @@ export function messageHandler(args: HandlerArgs): void {
     };
 
     const text = args.msg.text;
-    const handler = handlerMap[text ?? ""];
+    const handler = handlerMap[text ?? ''];
 
     if (handler) {
         // Handle async functions properly
         const result = handler(args);
         if (result instanceof Promise) {
             result.catch((error) =>
-                logger.error(
-                    { error: error.message, text },
-                    "Unhandled error in message handler"
-                )
+                logger.error({ error: error.message, text }, 'Unhandled error in message handler'),
             );
         }
     }
@@ -251,11 +215,9 @@ function isAllCampsBooked(db: Db): boolean {
 async function startMonitoring(bot: TelegramBot, db: Db) {
     const notificationService = new NotificationService(bot);
     const { chatIds } = db.state;
-    const startMessage = MESSAGES.MONITORING_STARTED(
-        CONFIG.checkInterval / 1000
-    );
+    const startMessage = MESSAGES.MONITORING_STARTED(CONFIG.checkInterval / 1000);
 
-    logger.info("🟢 Monitoring started");
+    logger.info('🟢 Monitoring started');
     await db.startPolling();
 
     // Notify all chats about monitoring start
@@ -265,21 +227,17 @@ async function startMonitoring(bot: TelegramBot, db: Db) {
 
     // Start polling all monitored URLs
     await Promise.allSettled(
-        monitoredUrls.map((monitoredUrl) =>
-            pollCampingUrl({ monitoredUrl, bot, db })
-        )
+        monitoredUrls.map((monitoredUrl) => pollCampingUrl({ monitoredUrl, bot, db })),
     );
 
     // Notify success and stop monitoring
-    await notificationService.notifyAllChats(
-        chatIds,
-        MESSAGES.ALL_CAMPS_SUCCESS,
-        { reply_markup: KeyboardLayouts.startKeyboard }
-    );
+    await notificationService.notifyAllChats(chatIds, MESSAGES.ALL_CAMPS_SUCCESS, {
+        reply_markup: KeyboardLayouts.startKeyboard,
+    });
 
     await db.stopPolling();
 
-    logger.info("🎉 All URLs have returned success responses!");
+    logger.info('🎉 All URLs have returned success responses!');
 }
 
 /**
@@ -290,15 +248,11 @@ async function stopMonitoring(bot: TelegramBot, db: Db) {
     const { chatIds } = db.state;
 
     await db.stopPolling();
-    logger.info("🔴 Monitoring stopped");
+    logger.info('🔴 Monitoring stopped');
 
-    await notificationService.notifyAllChats(
-        chatIds,
-        MESSAGES.MONITORING_STOPPED,
-        {
-            reply_markup: KeyboardLayouts.startKeyboard,
-        }
-    );
+    await notificationService.notifyAllChats(chatIds, MESSAGES.MONITORING_STOPPED, {
+        reply_markup: KeyboardLayouts.startKeyboard,
+    });
 }
 
 /**
@@ -310,12 +264,12 @@ function buildStatusMessage(db: Db): string {
     const campInfo = Object.entries(campState)
         .map(([value, state]) => {
             const campName = valueToNameMap[value as CampValue];
-            const status = state ? "⌛️ В процессе" : "✅ Забронирована";
+            const status = state ? '⌛️ В процессе' : '✅ Забронирована';
             return `· ${campName}: ${status}`;
         })
-        .join("\n");
+        .join('\n');
 
-    const monitoringStatus = isPollingOn ? "🟢 Включен" : "🔴 Остановлен";
+    const monitoringStatus = isPollingOn ? '🟢 Включен' : '🔴 Остановлен';
 
     return `📊 Статус мониторинга:\n\nМониторинг: ${monitoringStatus}\n\nСостояние стоянок:\n\n${campInfo}`;
 }

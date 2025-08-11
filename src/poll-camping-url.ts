@@ -1,11 +1,11 @@
-import axios from "axios";
-import { CONFIG } from "./config";
-import { handlePollingError } from "./error";
-import { logger } from "./logger";
-import { sendSuccessNotification } from "./notifications";
-import { MonitoredUrl } from "./types";
-import TelegramBot from "node-telegram-bot-api";
-import { Db } from "./db";
+import axios from 'axios';
+import { CONFIG } from './config';
+import { handlePollingError } from './error';
+import { logger } from './logger';
+import { sendSuccessNotification } from './notifications';
+import { MonitoredUrl } from './types';
+import TelegramBot from 'node-telegram-bot-api';
+import { Db } from './db';
 
 type PollUrlsOptions = {
     monitoredUrl: MonitoredUrl;
@@ -23,7 +23,7 @@ export function pollCampingUrl({ monitoredUrl, db, bot }: PollUrlsOptions) {
             try {
                 const response = await axios.post(url, payload, {
                     timeout: 10000,
-                    headers: { "Content-Type": "application/json" },
+                    headers: { 'Content-Type': 'application/json' },
                 });
 
                 if (response.data.isSuccess) {
@@ -32,9 +32,7 @@ export function pollCampingUrl({ monitoredUrl, db, bot }: PollUrlsOptions) {
                     await db.stopPollingByCampValue(value);
 
                     await Promise.allSettled(
-                        chatIds.map((chatId) =>
-                            sendSuccessNotification(bot, chatId, name)
-                        )
+                        chatIds.map((chatId) => sendSuccessNotification(bot, chatId, name)),
                     );
 
                     return resolve({
@@ -44,10 +42,7 @@ export function pollCampingUrl({ monitoredUrl, db, bot }: PollUrlsOptions) {
                     });
                 }
 
-                logger.info(
-                    response.data,
-                    `⏳ Polling ${name} - waiting for success response...`
-                );
+                logger.info(response.data, `⏳ Polling ${name} - waiting for success response...`);
             } catch (error) {
                 handlePollingError(error, name);
             }

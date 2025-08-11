@@ -1,6 +1,6 @@
-import fs from "node:fs";
-import path from "node:path";
-import { CampValue } from "./types";
+import fs from 'node:fs';
+import path from 'node:path';
+import { CampValue } from './types';
 
 type State = typeof defaultState;
 
@@ -19,19 +19,15 @@ export class Db {
     private file: string;
 
     constructor() {
-        const dataDir = path.resolve(__dirname, "../data");
+        const dataDir = path.resolve(__dirname, '../data');
         fs.mkdirSync(dataDir, { recursive: true });
-        this.file = path.resolve(dataDir, "state.json");
+        this.file = path.resolve(dataDir, 'state.json');
 
         if (fs.existsSync(this.file)) {
-            const state = fs.readFileSync(this.file, "utf-8");
+            const state = fs.readFileSync(this.file, 'utf-8');
             this._state = JSON.parse(state);
         } else {
-            fs.writeFileSync(
-                this.file,
-                JSON.stringify(defaultState, null, 2),
-                "utf-8"
-            );
+            fs.writeFileSync(this.file, JSON.stringify(defaultState, null, 2), 'utf-8');
             this._state = defaultState;
         }
     }
@@ -41,11 +37,7 @@ export class Db {
     }
 
     private async saveState() {
-        await fs.promises.writeFile(
-            this.file,
-            JSON.stringify(this._state, null, 2),
-            "utf-8"
-        );
+        await fs.promises.writeFile(this.file, JSON.stringify(this._state, null, 2), 'utf-8');
     }
 
     public async addChatId(chatId: number) {
