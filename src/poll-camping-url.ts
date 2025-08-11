@@ -20,8 +20,6 @@ export function pollCampingUrl({ monitoredUrl, db, bot }: PollUrlsOptions) {
 
     return new Promise((resolve) => {
         const poll = async () => {
-            if (!db.isPollingActive(value)) return;
-
             try {
                 const response = await axios.post(url, payload, {
                     timeout: 10000,
@@ -33,9 +31,11 @@ export function pollCampingUrl({ monitoredUrl, db, bot }: PollUrlsOptions) {
 
                     await db.stopPollingByCampValue(value);
 
-                    chatIds.forEach((chatId) => {
-                        sendSuccessNotification(bot, chatId, name);
-                    });
+                    await Promise.allSettled(
+                        chatIds.map((chatId) =>
+                            sendSuccessNotification(bot, chatId, name)
+                        )
+                    );
 
                     return resolve({
                         url,
