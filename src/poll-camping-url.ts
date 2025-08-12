@@ -21,28 +21,30 @@ export function pollCampingUrl({ monitoredUrl, db, bot }: PollUrlsOptions) {
     return new Promise((resolve) => {
         const poll = async () => {
             try {
-                const response = await axios.post(url, payload, {
-                    timeout: 10000,
+                const { data } = await axios.post(url, payload, {
+                    timeout: CONFIG.timeout,
                     headers: { 'Content-Type': 'application/json' },
                 });
 
-                if (response.data.isSuccess) {
+                if (data.isSuccess) {
                     logger.info(`✅ Success response received from ${name}`);
 
                     await db.stopPollingByCampValue(value);
 
-                    await Promise.allSettled(
-                        chatIds.map((chatId) => sendSuccessNotification(bot, chatId, name)),
+                    const promises = chatIds.map((chatId) =>
+                        sendSuccessNotification(bot, chatId, name),
                     );
+
+                    await Promise.allSettled(promises);
 
                     return resolve({
                         url,
+                        data,
                         success: true,
-                        data: response.data,
                     });
                 }
 
-                logger.info(response.data, `⏳ Polling ${name} - waiting for success response...`);
+                logger.info(data, `⏳ Polling ${name} - waiting for success response...`);
             } catch (error) {
                 handlePollingError(error, name);
             }

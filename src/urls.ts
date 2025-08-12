@@ -1,5 +1,5 @@
 import { CONFIG } from './config';
-import { CampValue, MonitoredUrl } from './types';
+import { CampValue, MonitoredUrl, valueToNameMap } from './types';
 
 const { url, fullName, phoneNumber, email } = CONFIG;
 
@@ -18,7 +18,7 @@ export const commonPayload = {
 
 export const monitoredUrls = [
     {
-        name: 'Переволока',
+        name: valueToNameMap[CampValue.Perovoloka],
         url,
         payload: {
             selectedCamping: {
@@ -31,7 +31,7 @@ export const monitoredUrls = [
         },
     },
     {
-        name: 'Хуторок',
+        name: valueToNameMap[CampValue.Khutorok],
         url,
         payload: {
             selectedCamping: {
@@ -44,7 +44,7 @@ export const monitoredUrls = [
         },
     },
     {
-        name: 'Купальская ночь',
+        name: valueToNameMap[CampValue.KupalskayaNoc],
         url,
         payload: {
             selectedCamping: {

@@ -25,6 +25,7 @@ export const CONFIG = {
     fullName: getEnvVar('FULL_NAME'),
     phoneNumber: getEnvVar('PHONE_NUMBER'),
     checkInterval: 1000,
+    timeout: 10000,
     url: 'https://admin3.zapytai.by/widget/createBooking',
     logPath: getLogPath(),
     isDevelopment: process.env.NODE_ENV === 'development',
